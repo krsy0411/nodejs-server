@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 
 const PORT = 4000;
 const SECRET_TOKEN = "secretToken";
+const REFRESH_SECRET_TOKEN = "refreshSecretToken";
 
 const posts = [
 	{
@@ -14,6 +15,7 @@ const posts = [
 		title: "Post 2",
 	},
 ];
+const refreshTokens = [];
 
 const app = express(); // express app 생성
 
@@ -41,12 +43,27 @@ function authMiddleWare(req, res, next) {
 app.use(express.json()); // application/json 파싱
 
 // http method
+app.get("/", (req, res) => {
+	// 텍스트 형태로 응답
+	res.send("Hello World!");
+});
+
 app.post("/login", (req, res) => {
-	const username = req.body.username;
-	const user = { name: username };
+	const username = req.body.username; // 요청으로부터 username 가져오기
+	const user = { name: username }; // 빼낸 username을 저장할 형태(객체)로 변환
 
-	const accessToken = jwt.sign(user, SECRET_TOKEN);
+	// accessToken, refreshToken 생성
+	const accessToken = jwt.sign(user, SECRET_TOKEN, { expiresIn: "30s" });
+	const refreshToken = jwt.sign(user, REFRESH_SECRET_TOKEN, {
+		expiresIn: "1d",
+	});
+	refreshTokens.push(refreshToken);
 
+	// 응답 : refreshToken은 쿠키에 넣어주고, accessToken은 body에 넣어서 보내준다.
+	res.cookie("jwt", refreshToken, {
+		httpOnly: true,
+		maxAge: 24 * 60 * 60 * 1000,
+	});
 	res.json({ accessToken });
 });
 
