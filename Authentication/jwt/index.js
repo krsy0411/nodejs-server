@@ -1,10 +1,12 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 
 const PORT = 4000;
 const SECRET_TOKEN = "secretToken";
 const REFRESH_SECRET_TOKEN = "refreshSecretToken";
 
+// DB역할용 데이터
 const posts = [
 	{
 		username: "John",
@@ -15,6 +17,7 @@ const posts = [
 		title: "Post 2",
 	},
 ];
+// refresh token 저장용
 const refreshTokens = [];
 
 const app = express(); // express app 생성
@@ -41,6 +44,7 @@ function authMiddleWare(req, res, next) {
 
 // middleware(global)
 app.use(express.json()); // application/json 파싱
+app.use(cookieParser()); // cookie 파싱
 
 // http method
 app.get("/", (req, res) => {
@@ -69,6 +73,27 @@ app.post("/login", (req, res) => {
 
 app.get("/posts", authMiddleWare, (req, res) => {
 	res.json(posts);
+});
+
+app.get("/refresh", (req, res) => {
+	// console에 확인
+	console.log(refreshTokens);
+
+	const refreshToken = req.cookies.jwt;
+	if (!refreshTokens.includes(refreshToken)) {
+		return res.sendStatus(403);
+	}
+
+	jwt.verify(refreshToken, REFRESH_SECRET_TOKEN, (err, user) => {
+		if (err) {
+			return res.sendStatus(403);
+		}
+
+		const accessToken = jwt.sign({ name: user.name }, SECRET_TOKEN, {
+			expiresIn: "30s",
+		});
+		res.json({ accessToken });
+	});
 });
 
 // 실행
