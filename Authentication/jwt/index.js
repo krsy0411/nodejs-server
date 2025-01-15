@@ -8,7 +8,7 @@ const SECRET_TOKEN = process.env.SECRET_TOKEN;
 const REFRESH_SECRET_TOKEN = process.env.REFRESH_SECRET_TOKEN;
 
 // 인증과정에서, 요청 빈도를 제한하기 위한 Rate limiting 설정 : 서버 과부하 방지
-const refreshRateLimiter = rateLimit({
+const authRateLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15분
 	max: 100, // 15분 동안 최대 100개의 요청 허용
 	message:
@@ -81,11 +81,12 @@ app.post("/login", (req, res) => {
 	res.json({ accessToken });
 });
 
-app.get("/posts", authMiddleWare, (req, res) => {
+// 기존 route handler에 rate limiter 적용
+app.get("/posts", authRateLimiter, authMiddleWare, (req, res) => {
 	res.json(posts);
 });
 
-app.get("/refresh", refreshRateLimiter, (req, res) => {
+app.get("/refresh", authRateLimiter, (req, res) => {
 	// console에 확인
 	console.log(refreshTokens);
 
