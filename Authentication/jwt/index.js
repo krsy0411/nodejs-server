@@ -3,8 +3,8 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 
 const PORT = 4000;
-const SECRET_TOKEN = "secretToken";
-const REFRESH_SECRET_TOKEN = "refreshSecretToken";
+const SECRET_TOKEN = process.env.SECRET_TOKEN;
+const REFRESH_SECRET_TOKEN = process.env.REFRESH_SECRET_TOKEN;
 
 // DB역할용 데이터
 const posts = [
@@ -26,7 +26,7 @@ function authMiddleWare(req, res, next) {
 	const authHeader = req.headers["authorization"];
 	const token = authHeader && authHeader.split(" ")[1];
 
-	if (token == null) {
+	if (token === null) {
 		return res.sendStatus(401);
 	}
 
