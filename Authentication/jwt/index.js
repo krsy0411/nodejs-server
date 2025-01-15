@@ -26,7 +26,8 @@ function authMiddleWare(req, res, next) {
 	const authHeader = req.headers["authorization"];
 	const token = authHeader && authHeader.split(" ")[1];
 
-	if (token === null) {
+	// === : 문자열 비교 : 타이밍 공격에 취약 => !연산자로 변경
+	if (!token) {
 		return res.sendStatus(401);
 	}
 
