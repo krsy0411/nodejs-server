@@ -5,11 +5,15 @@ const mongoose = require("mongoose");
 const { User } = require("./models/index");
 const passport = require("passport");
 const cookieSession = require("cookie-session");
+const {
+	checkAuthentication,
+	checkNotAuthentication,
+} = require("./middlewares/auth");
 require("dotenv").config();
 
 const PORT = 4000;
 const CONNECT_STRING = process.env.CONNECT_STRING;
-const cookieEncryptionKey = ["key1", "key2"];
+const cookieEncryptionKey = process.env.COOKIE_ENCRYPT_KEY;
 
 app.use(express.json());
 /* URL-encoded 형식의 요청 본문을 구문 분석(parsing)하는 미들웨어를 설정 :
@@ -19,7 +23,8 @@ app.use(express.urlencoded({ extended: false }));
 // passport : cookie-session 설정(주의 : 늘 passport 모듈 초기화 미들웨어보다 우선시할것)
 app.use(
 	cookieSession({
-		keys: cookieEncryptionKey,
+		name: "cookie-session-name",
+		keys: [cookieEncryptionKey],
 	})
 );
 // register regenerate & save after the cookieSession middleware initialization
@@ -56,10 +61,10 @@ mongoose
 
 app.use("/static", express.static(path.join(__dirname, "public")));
 
-app.get("/", (req, res) => {
+app.get("/", checkAuthentication, (req, res) => {
 	res.render("main");
 });
-app.get("/login", (req, res) => {
+app.get("/login", checkNotAuthentication, (req, res) => {
 	res.render("login");
 });
 app.get("/signup", (req, res) => {
