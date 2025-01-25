@@ -1,34 +1,35 @@
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
+const { User } = require("../models/users");
 
 passport.use(
+	"local",
 	new LocalStrategy(
 		{ usernameField: "email", passwordField: "password" },
-		function (email, password, done) {
-			// Here you would look up the user in your DB and check the password
-			User.findOne({ email: email.toLowerCase() }, function (err, user) {
-				if (err) {
-					return done(err);
-				}
+		async (email, password, done) => {
+			try {
+				const user = await User.findOne({ email });
 				if (!user) {
-					return done(null, false, { message: "Incorrect username." });
+					return done(null, false, { message: "Incorrect email." });
 				}
-
-				user.comparePassword(password, (err, isMatch) => {
-					if (err) return done(err); // 에러인 경우
-					if (isMatch) return done(null, user); // 비밀번호가 일치하는 경우
-
-					return done(null, false, { message: "Invalid email or password" }); // 비밀번호가 일치하지 않는 경우
-				});
-			});
+				const isMatch = user.comparePassword(password); // bcrypt 기반의 compare는 아직 안 하므로, 비동기 처리할 필요는 X
+				if (!isMatch) {
+					return done(null, false, { message: "Incorrect password." });
+				}
+				return done(null, user);
+			} catch (err) {
+				return done(err);
+			}
 		}
 	)
 );
 
+// 사용자 로그인 시 사용 : 세션에 사용자ID를 저장
 passport.serializeUser(function (user, done) {
 	done(null, user.id);
 });
 
+// 사용자 인증 후 요청이 있을 때마다 호출 : 세션에 저장된 식별자 사용 -> 사용자 정보를 디비에서 조회 -> 조회된 사용자 객체를 요청 객체에 추가
 passport.deserializeUser(function (id, done) {
 	User.findById(id, function (err, user) {
 		done(err, user);

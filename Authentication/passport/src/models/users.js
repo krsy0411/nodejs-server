@@ -19,13 +19,17 @@ const userSchema = new mongoose.Schema({
 	},
 });
 
-userSchema.methods.comparePassword = function (plainPassword, cb) {
+userSchema.methods.comparePassword = function (plainPassword) {
 	// 원래 : bcrpt 라이브러리를 사용하여 비밀번호를 암호화하고 비교하는 코드
 	// 현재 : 비밀번호를 평문으로 저장하고 비교하는 코드
-	if (plainPassword === this.password) {
-		return cb(null, true);
-	} else {
-		return cb("Password is incorrect", false);
+	try {
+		if (plainPassword === this.password) {
+			return true;
+		} else {
+			return false;
+		}
+	} catch (err) {
+		throw new Error(err);
 	}
 };
 
