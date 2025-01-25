@@ -30,8 +30,11 @@ passport.serializeUser(function (user, done) {
 });
 
 // 사용자 인증 후 요청이 있을 때마다 호출 : 세션에 저장된 식별자 사용 -> 사용자 정보를 디비에서 조회 -> 조회된 사용자 객체를 요청 객체에 추가
-passport.deserializeUser(function (id, done) {
-	User.findById(id, function (err, user) {
-		done(err, user);
-	});
+passport.deserializeUser(async (id, done) => {
+	try {
+		const user = await User.findById(id);
+		done(null, user);
+	} catch (err) {
+		done(err);
+	}
 });

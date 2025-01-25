@@ -99,6 +99,13 @@ app.post("/signup", async (req, res) => {
 		console.error(err);
 	}
 });
+app.post("/logout", (req, res) => {
+	req.logOut(function (err) {
+		if (err) return next(err);
+
+		res.redirect("/");
+	});
+});
 
 app.listen(PORT, () => {
 	console.log(`Server is running on port localhost:${PORT}`);
